@@ -21,11 +21,12 @@ pub struct Registry {
 
 fn dummy_kyc(sender: &Address, holder: &Holder) -> bool {
     // Call out to KYC contract goes here
+    // All holder details should be held in seperate identity service
     true
 }
 
 fn give_change(sender: &Address, amount: u64) -> Result<(), Box<dyn Error>> {
-    // Create and send transaction.
+    // Private function
     Transfer {
         destination: *sender,
         amount: amount,
@@ -62,22 +63,20 @@ impl Registry {
             return Err(Box::new(RegistryError::SaleComplete));
         }
 
-        let mut num_shares = params.amount / self.price as u64; // truncate decimal
+        if !dummy_kyc(&params.sender, &holder) { 
+            return Err(Box::new(RegistryError::FailedKYC));
+        }
+
         // Check minimum parcel size is met
+        let mut num_shares = params.amount / self.price as u64; // truncate decimal
         if num_shares < self.min_parcel {
             return Err(Box::new(RegistryError::ParcelSizeNotMet));
         }
 
         if num_shares > self.supply {
-            num_shares = self.supply;
+            num_shares = self.supply; // issue remaining shares
         }
 
-        if !dummy_kyc(&params.sender, &holder) { 
-            return Err(Box::new(RegistryError::FailedKYC));
-        }
-
-
-        // pub holders: HashMap<Address, (Holder, u64, u64)>,
         // Allocate shares
         let (_, balance, idx) = self.holders.entry(params.sender)
             .or_insert( (holder, 0, 0) );
@@ -86,6 +85,7 @@ impl Registry {
         *balance += num_shares;
         *idx = params.round_idx;
 
+        // Return unspent Perls to the purchaser
         let change = params.amount - (num_shares * self.price as u64);
         if change > 0 {
             return give_change(&params.sender, change);
@@ -120,7 +120,6 @@ impl Registry {
         if !dummy_kyc(&recipient, &r_holder) { 
             return Err(Box::new(RegistryError::FailedKYC));
         }
-
 
         // Get, check, and update sender's holdings
         if let Some((s_holder, s_balance, purchase_idx)) = self.holders.get_mut(&sender) {
