@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::fmt;
 
 use smart_contract::payload::Parameters;
+use smart_contract::log;
 use smart_contract::transaction::{Transaction, Transfer};
 use smart_contract_macros::smart_contract;
 
@@ -43,10 +44,15 @@ const COOL_OFF_ROUNDS: u64 = 5; // number of rounds before investment confirmed
 #[smart_contract]
 impl Registry {
     fn init(params: &mut Parameters) -> Self {
+        /*
         let supply = params.read();
         let price = params.read();  // Price per share
         let min_parcel = params.read();
+        */
         let holders = HashMap::new();
+        let supply: u64 = 1000;
+        let price: u8 = 10;  // Price per share
+        let min_parcel: u64 = 1; 
 
         Registry {
             holders,
@@ -88,7 +94,8 @@ impl Registry {
         // Return unspent Perls to the purchaser
         let change = params.amount - (num_shares * self.price as u64);
         if change > 0 {
-            return give_change(&params.sender, change);
+            //return give_change(&params.sender, change);
+            return Ok(());
         }
 
         Ok(())
@@ -142,6 +149,19 @@ impl Registry {
 
         Ok(())
     }
+
+    fn get_holders(&mut self, params: &mut Parameters) ->  Result<(), Box<dyn Error>> {
+        let mut holders = Vec::new();
+
+        for (h_id, h) in &self.holders {
+            holders.push(format!("<{}>: {},\t{} shares, \tRnd:{}\t", 
+                                      to_hex_string_abridge(h_id), (h.0).0, h.1, h.2));
+
+        }
+        log(&holders.join("\n"));
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -171,4 +191,15 @@ impl fmt::Display for RegistryError {
             RegistryError::CustomError(ref cause) => write!(f, "Error: {}", cause),
         }
     }
+}
+
+fn to_hex_string_abridge(bytes: &[u8]) -> String {
+    to_hex_string(&[&bytes[..4], &bytes[bytes.len()-4..]].concat())
+}
+
+fn to_hex_string(bytes: &[u8]) -> String {
+    let strs: Vec<String> = bytes.iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    strs.join("")
 }
