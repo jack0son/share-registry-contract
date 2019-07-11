@@ -5,7 +5,7 @@ a simple association of addresses to balances and names.
 
 Implemented to begin learning development of Wavelet contracts using Rust.
 
-*Contraints*
+_Contraints_
  * _Minimum parcel size_: Purchaser must request a minimum amount of shares to
    participate in the sale
  * _Dummy KYC_:	Check all potential holders (sale or transfer) against a KYC
@@ -13,7 +13,36 @@ Implemented to begin learning development of Wavelet contracts using Rust.
  * _Cool-off Period_: Investors can cancel their purchase within a fixed number
    of rounds following the purchase.
 
-## Spawn
+## Node Client
+Basic nodejs client demonstrating synchronous transaction submission and
+confirmation in a structure that will be familiar to trufflejs users.
+
+This client is an initial sketch for implementing truffle-like functionality
+for Wavelet to enable low friction on-boarding for Web3 dApp developers.
+
+### Setup
+
+*Before you start*
+1. You must be running a local Wavelet testnet. Follow [Perlin's
+guide](https://wavelet.perlin.net/docs/setup) to get up and running.
+
+2. You must also have the rust dependencies specified in the [Smart
+Contract](https://wavelet.perlin.net/docs/smart-contracts#setup) setup.
+
+*Ready to roll...*
+
+Clone this repostory then run the following:
+```bash
+cd <path>/share-registry-contract
+
+build cargo build --release --target wasm32-unknown-unknown                       
+
+cd client
+
+npm run start
+```
+
+![alt text](client/doc/main-debug_output.png "Client debug output")
 
 ## Issues
  - [ ] Supply should be checked as invariant
