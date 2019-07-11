@@ -4,8 +4,7 @@ const JSBI = require('jsbi');
 const BigInt = JSBI.BigInt;
 const fs = require('fs');
 const debug = require('./debug/event-test.js');
-
-// Debug modules
+const {inspect} = require('util');
 
 const client = new Wavelet("http://127.0.0.1:9000");
 
@@ -34,6 +33,7 @@ const client = new Wavelet("http://127.0.0.1:9000");
 	const txl = await getTxLogger(client, {creator: Buffer.from(wallets[0].publicKey).toString("hex")}, nodeInfo.round.depth);
 	await transfer(client, wallets[0], wallets[1].publicKey, BigInt(gift/2), BigInt(gift/4))
 
+	return process.exit(0)
 })();
 
 // @param {number} pruneDepth ignore events with depth lower than prune depth
@@ -51,14 +51,21 @@ async function getTxLogger(client, opts = {}, pruneDepth = 0) {
 }
 
 // @param {{id: string|undefined, tag: number|undefined, sender: string|undefined, creator: string|undefined}} opts
-function waitNextTx(client, opts = {}) {
+// @param {number} timeout time until reject
+function waitNextTx(client, opts = {}, timeout = 3000) {
 	return new Promise((reject, resolve) => {
 		const callbacks = {
 			onTransactionApplied: reject,
 			onTransactionRejected: resolve,
 		};
-	
+
 		client.pollTransactions(callbacks, opts);
+
+		if(timeout !== undefined) {
+			setTimeout(() => {
+				reject(`Timout on tx wait with opts ${inspect(opts)}`);
+			}, timeout);
+		}
 	});
 }
 
@@ -66,8 +73,12 @@ async function transfer(client, wallet, recipient, amount, gasLimit) {
 	const t = await client.transfer(wallet, recipient, amount);
 	debug.m(`Transfer pending at tx ID <${abridge(t.tx_id)}> ...`)
 
+	try {
 	const resp = await waitNextTx(client, {id: t.tx_id});
 	debug.m(`... tx<${abridge(t.tx_id)}>: ${tagString[resp.tag]} was ${resp.event}`);
+	} catch(e) {
+		debug.err(e);
+	}
 }
 
 async function getAccount(client, publicKey) {
