@@ -155,7 +155,7 @@ impl Registry {
 
         for (h_id, h) in &self.holders {
             holders.push(format!("<{}>: {},\t{} shares, \tRnd:{}\t", 
-                                      to_hex_string_abridge(h_id), (h.0).0, h.1, h.2));
+                                      to_hex_string(h_id), (h.0).0, h.1, h.2));
 
         }
         log(&holders.join("\n"));
