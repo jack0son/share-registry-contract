@@ -3,8 +3,11 @@ const {Wavelet, Contract, TAG_TRANSFER} = require('/home/jackson/Repositories/gi
 const JSBI = require('jsbi');
 const BigInt = JSBI.BigInt;
 const fs = require('fs');
-const debug = require('./debug/event-test.js');
+
+// Debugging 
 const {inspect} = require('util');
+const chalk = require('chalk');
+const debug = require('./debug/event-test.js');
 
 const client = new Wavelet("http://127.0.0.1:9000");
 
@@ -14,11 +17,7 @@ const client = new Wavelet("http://127.0.0.1:9000");
 	const account = await getAccount(client, wallet.publicKey);
 	showBalance(client, wallet);
 
-	// Set up async tx logger to confirm promise based tx events are arriving
-	let nodeInfo = await client.getNodeInfo();
-	debug.v('Node info'); debug.v(nodeInfo);
-
-	// Logger on genesis wallet will polute logs 
+	// Logger on genesis wallet will pollute logs 
 	//const txl = await getTxLogger(client, {creator: account.public_key}, nodeInfo.round.depth);
 
 	// Donate perls to some new wallets
@@ -29,8 +28,10 @@ const client = new Wavelet("http://127.0.0.1:9000");
 	//await Promise.all(wallets.map(w => (transfer(client, wallet, Buffer.from(w.publicKey).toString("hex"), BigInt(gift), gasLimit))));
 	await Promise.all(wallets.map(w => (transfer(client, wallet, w.publicKey, BigInt(gift), gasLimit))));
 
-	// Transfer from new wallet
+	// Set up async tx logger to confirm promise based tx events are arriving
+	let nodeInfo = await client.getNodeInfo();
 	const txl = await getTxLogger(client, {creator: Buffer.from(wallets[0].publicKey).toString("hex")}, nodeInfo.round.depth);
+	// Transfer from new wallet
 	await transfer(client, wallets[0], wallets[1].publicKey, BigInt(gift/2), BigInt(gift/4))
 
 	return process.exit(0)
@@ -41,7 +42,7 @@ const client = new Wavelet("http://127.0.0.1:9000");
 async function getTxLogger(client, opts = {}, pruneDepth = 0) {
 	const log = d => {
 			if(d.depth > pruneDepth)
-				debug.m(`... ${d.event} tx <${abridge(d.tx_id)}> created by <${abridge(d.creator_id)}> at depth ${d.depth}`);
+				debug.h(`async_logger: ${d.event} ${tagString[d.tag]}:<${abridge(d.tx_id)}> created by <${abridge(d.creator_id)}> at depth ${d.depth}`);
 	};
 
 	return await client.pollTransactions({
@@ -52,18 +53,18 @@ async function getTxLogger(client, opts = {}, pruneDepth = 0) {
 
 // @param {{id: string|undefined, tag: number|undefined, sender: string|undefined, creator: string|undefined}} opts
 // @param {number} timeout time until reject
-function waitNextTx(client, opts = {}, timeout = 3000) {
-	return new Promise((reject, resolve) => {
+function waitNextTx(client, opts = {}, timeout = 5000) {
+	return new Promise((resolve, reject) => {
 		const callbacks = {
-			onTransactionApplied: reject,
-			onTransactionRejected: resolve,
+			onTransactionApplied: resolve,
+			onTransactionRejected: reject,
 		};
 
 		client.pollTransactions(callbacks, opts);
 
 		if(timeout !== undefined) {
 			setTimeout(() => {
-				reject(`Timout on tx wait with opts ${inspect(opts)}`);
+				reject(`Timeout on tx wait with opts ${inspect(opts)}`);
 			}, timeout);
 		}
 	});
@@ -71,11 +72,11 @@ function waitNextTx(client, opts = {}, timeout = 3000) {
 
 async function transfer(client, wallet, recipient, amount, gasLimit) {
 	const t = await client.transfer(wallet, recipient, amount);
-	debug.m(`Transfer pending at tx ID <${abridge(t.tx_id)}> ...`)
+	debug.h(`Transfer ${chalk.yellow('pending')} at tx ID <${abridge(t.tx_id)}> ...`)
 
 	try {
-	const resp = await waitNextTx(client, {id: t.tx_id});
-	debug.m(`... tx<${abridge(t.tx_id)}>: ${tagString[resp.tag]} was ${resp.event}`);
+		const resp = await waitNextTx(client, {id: t.tx_id});
+		debug.h(`... ${chalk.green('confirmed')} <${abridge(t.tx_id)}>:${tagString[resp.tag]} was ${resp.event}`);
 	} catch(e) {
 		debug.err(e);
 	}
@@ -91,7 +92,7 @@ async function getAccount(client, publicKey) {
 
 async function showBalance(client, wallet) {
 	let account = await getAccount(client, wallet.publicKey);
-	debug.m(`Genesis account <${account.public_key}> has balance ${account.balance}`);
+	debug.h(`Genesis account <${account.public_key}> has balance ${account.balance}`);
 }
 
 const tagString = {

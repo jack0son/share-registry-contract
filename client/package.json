@@ -4,9 +4,9 @@
   "description": "",
   "main": "src/main.js",
   "scripts": {
-    "test": "DEBUG=et:* node src/event-test.js",
+    "start": "DEBUG=m:*,verbose node src/main.js",
     "test-verbose": "DEBUG=et:*,verbose node src/event-test.js",
-    "start": "echo \"Error: start not specified\" && exit 1"
+    "start-verbose": "echo \"Error: start not specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
