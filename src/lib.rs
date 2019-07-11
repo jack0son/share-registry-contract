@@ -154,7 +154,7 @@ impl Registry {
         let mut holders = Vec::new();
 
         for (h_id, h) in &self.holders {
-            holders.push(format!("<{}>: {},\t{} shares, \tRnd:{}\t", 
+            holders.push(format!("<{}>: {},  {} shares,  Rnd:{}", 
                                       to_hex_string(h_id), (h.0).0, h.1, h.2));
 
         }
