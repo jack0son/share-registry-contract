@@ -5,7 +5,7 @@ a simple association of addresses to balances and names.
 
 Implemented to begin learning development of Wavelet contracts using Rust.
 
-_Contraints_
+__Constraints__
  * _Minimum parcel size_: Purchaser must request a minimum amount of shares to
    participate in the sale
  * _Dummy KYC_:	Check all potential holders (sale or transfer) against a KYC
@@ -17,8 +17,8 @@ _Contraints_
 Basic nodejs client demonstrating synchronous transaction submission and
 confirmation in a structure that will be familiar to trufflejs users.
 
-This client is an initial sketch for implementing truffle-like functionality
-for Wavelet to enable low friction on-boarding for Web3 dApp developers.
+This client is an initial sketch for implementing a truffle-like framework
+for Wavelet in order to lower on-boarding friction for Web3 dApp developers.
 
 ### Setup
 
@@ -31,7 +31,7 @@ Contract](https://wavelet.perlin.net/docs/smart-contracts#setup) setup.
 
 *Ready to roll...*
 
-Clone this repostory then run the following:
+Clone this repository then run the following in your terminal:
 ```bash
 cd <path>/share-registry-contract
 
