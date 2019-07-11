@@ -1,0 +1,19 @@
+{
+  "name": "share-reg-wavelet-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "DEBUG=et:* node src/event-test.js",
+    "test-verbose": "DEBUG=et:*,verbose node src/event-test.js",
+    "start": "echo \"Error: start not specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "debug": "^4.1.1",
+    "supports-color": "^7.0.0",
+    "wavelet-client": "^1.0.7"
+  }
+}
