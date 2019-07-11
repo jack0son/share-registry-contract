@@ -10,6 +10,7 @@ const chalk = require('chalk');
 const client = new Wavelet("http://127.0.0.1:9000");
 
 (async () => {
+
 	// Appropriate the node's funds
 	const nodeWallet = Wavelet.loadWalletFromPrivateKey('87a6813c3b4cf534b6ae82db9b1409fa7dbd5c13dba5858970b56084c4a930eb400056ee68a7cc2695222df05ea76875bc27ec6e61e8e62317c336157019c405');
 	const nodeAccount = await getAccount(client, nodeWallet.publicKey);
@@ -57,6 +58,8 @@ const client = new Wavelet("http://127.0.0.1:9000");
 
 })();
 
+// Wait until the transaction specified in opts is applied or rejected
+// @param {Wavelet} client Wavelet client
 // @param {{id: string|undefined, tag: number|undefined, sender: string|undefined, creator: string|undefined}} opts
 // @param {number} timeout time until reject
 // @returns {Promise<tx_event>}
@@ -74,18 +77,6 @@ function waitNextTx(client, opts = {}, timeout = 10000) {
 				reject(`Timeout on tx wait with opts ${inspect(opts)}`);
 			}, timeout);
 		}
-		/* WebSocket example response object
-		 { 
-				mod: 'tx',
-				event: 'applied',
-				tx_id: 'bacad086df44ffeba28ce7c4f6487b3c34263c4ebf86c3a679b7621fe60c9487',
-				sender_id: '400056ee68a7cc2695222df05ea76875bc27ec6e61e8e62317c336157019c405',
-				creator_id: '400056ee68a7cc2695222df05ea76875bc27ec6e61e8e62317c336157019c405',
-				depth: 1979,
-				tag: 2,
-				time: '2019-07-10T12:04:00+09:30' 
-		 }
-		*/
 	});
 }
 
@@ -123,8 +114,7 @@ async function transfer(client, wallet, recipient, amount, gasLimit) {
 	}
 }
 
-// Scuba syntax ShareRegsitry extends contract
-// Check out truffle syntax
+// syntax: ShareRegsitry extends contract
 class ShareRegistry {
 	constructor(path) {
 		this.path = path || './share_reg.wasm';
@@ -174,6 +164,7 @@ class ShareRegistry {
 					type: 'string',
 					value: name,
 				});
+
 			// Fetch Tx details
 			//const callTx = await self.client.getTransaction(call.tx_id);
 			//const txDetails = Wavelet.parseTransaction(callTx.tag, callTx.payload);
@@ -196,13 +187,6 @@ class ShareRegistry {
 			debug.err('Failed to get holders', e);
 		}
 	}
-}
-
-async function sendTxAndWait(params, tx = () => {}) {
-	// 1. keed params to arbitrary transactional client function
-	
-	// 2. wait on response
-	//return waitForTx();
 }
 
 async function showBalance(client, wallet) {
@@ -234,20 +218,3 @@ const readBinary = (fname) => {
 const abridge = (str) => {
 	return str.slice(0, 8).concat("...", str.slice(str.length - 8, str.length))
 }
-
-// Questions:
-//	- what is a parent ID?
-//	- cannot use reject resolve structure for tx wait
-//				- when does reject even occur (check websocket api)
-//				- appears to be a bug - rejection in node logs but no reject event
-//				recieved
-/*	
-	e.g. »»» ztransfer: transactions to non-contract accounts should not specify gas limit or function names or params
-	could not apply transfer transaction: transfer: transactions to non-contract accounts should not specify gas limit or function names or params
-	6:16PM DBG Pruned away round and transactions. current_round_id: 60 event: prune num_tx: 431 pruned_round_id: 30
-
-
-	ztransfer: b160f4cbe6916d2dbeb94047545ce2868897c8b2c7bad63cfd90200aeaa6be5d attempted to claim a gas limit of 9999999999998584256 PERLs, but only has 9998 PERLs
-could not apply transfer transaction: transfer: b160f4cbe6916d2dbeb94047545ce2868897c8b2c7bad63cfd90200aeaa6be5d attempted to claim a gas limit of 9999999999998584256 PERLs, but only has 9998 PERLs
-
-*/
